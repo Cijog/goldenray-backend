@@ -1594,10 +1594,11 @@ class Calculator:
         to change silently on a live website" are different claims; this is the fifth time
         that distinction has mattered.
 
-        ``battery_override`` is the explicit exception: a sales person choosing one of the
-        package's battery options (no battery / one / two) for a hybrid. It is a separate
-        field rather than a reading of ``bat_config`` so the public website, which always
-        sends ``bat_config``, keeps the package's band. On-grid ignores it.
+        ``battery_override`` is the explicit exception: choosing one of the package's
+        battery options (no battery / one / two) for a hybrid, in the Studio or on the
+        website's hybrid quotation. It is a separate field rather than a reading of
+        ``bat_config`` so a caller that only sends ``bat_config`` keeps the package's
+        band. On-grid ignores it.
         """
         override = self.p.get("battery_override") or ""
         if override and sys_type == "hybrid":
@@ -2624,14 +2625,13 @@ class Calculator:
         return available[0]
 
 
-def quote(data, *, today: date, staff: bool = False) -> dict:
+def quote(data, *, today: date) -> dict:
     """The website quote for ``data`` (the legacy ``/bom/api/calculate/`` request body) on ``today``.
 
-    ``staff`` honours the Studio-only ``battery_override``; a public caller always gets the package's band.
+    ``battery_override`` is honoured for every caller: the website's hybrid quotation prices its no / one / two
+    battery options with it. A request without the field keeps the package's band, so existing callers are unchanged.
     """
     params = parse_request(data)
-    if not staff:
-        params["battery_override"] = ""
     snapshot = load_snapshot(params["sys_type"])
     return Calculator(snapshot, params, today).compute()
 

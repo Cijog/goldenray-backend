@@ -42,7 +42,7 @@ def test_invalid_override_is_a_400(value):
     assert "battery_override" in caught.value.errors
 
 
-def test_public_quote_ignores_the_override(monkeypatch):
+def test_quote_honours_the_override_for_every_caller(monkeypatch):
     seen = {}
 
     class Recorder(Calculator):  # keeps the parser's static helpers (`_size_to_kw`)
@@ -56,6 +56,8 @@ def test_public_quote_ignores_the_override(monkeypatch):
     monkeypatch.setattr(website_quote, "Calculator", Recorder)
     body = {"sys_type": "hybrid", "size": "5", "tier": "value", "battery_override": "2"}
     website_quote.quote(body, today=date(2026, 10, 30))
-    assert seen["battery_override"] == ""
-    website_quote.quote(body, today=date(2026, 10, 30), staff=True)
     assert seen["battery_override"] == "2"
+    # Without the field the package keeps its own band.
+    seen.clear()
+    website_quote.quote({k: v for k, v in body.items() if k != "battery_override"}, today=date(2026, 10, 30))
+    assert seen["battery_override"] == ""

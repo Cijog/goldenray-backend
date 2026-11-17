@@ -55,7 +55,7 @@ class StaffQuoteView(BaseAPIView):
         ),
     )
     def post(self, request, *args, **kwargs):
-        result = website_quote.quote(request.data, today=timezone.localdate(), staff=True)
+        result = website_quote.quote(request.data, today=timezone.localdate())
         # The picking list is a different document, so it is a different response: a
         # browser on the warehouse floor is never sent prices it must not display.
         # Checked before the cost gate, since dispatch strips strictly more.
@@ -103,7 +103,7 @@ class QuoteCsvView(BaseAPIView):
     )
     def post(self, request, *args, **kwargs):
         mode = "dispatch" if str(request.data.get("mode") or "").lower() == "dispatch" else "quotation"
-        result = website_quote.quote(request.data, today=timezone.localdate(), staff=True)
+        result = website_quote.quote(request.data, today=timezone.localdate())
         body = website_quote.dispatch_body(result) if mode == "dispatch" else result
         response = HttpResponse(quote_csv.quote_csv(body, mode=mode), content_type="text/csv; charset=utf-8")
         response["Content-Disposition"] = f'attachment; filename="{quote_csv.filename(body, mode=mode)}"'
